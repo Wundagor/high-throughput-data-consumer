@@ -1,0 +1,22 @@
+services:
+  goapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: goapp
+    restart: unless-stopped
+    environment:
+      - DB_USER=homestead
+      - DB_PASSWORD=secret
+      - DB_NAME=laravel_app
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - RABBITMQ_URL=amqp://oleksandr:secret@rabbitmq:5672/
+      - RABBITMQ_VHOST=source_data_vhost
+      - RABBITMQ_QUEUE=source_data_queue
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    external: true
