@@ -20,7 +20,7 @@ func main() {
 	}
 	defer rabbitMQ.Close()
 
-	workerPool := consumer.NewWorkerPool(cfg.Consumer.WorkerCount, rabbitMQ, cfg.Database)
+	workerPool := consumer.NewWorkerPool(cfg.Consumer.Workers, rabbitMQ, cfg.Database)
 	workerPool.Start()
 
 	// Graceful shutdown

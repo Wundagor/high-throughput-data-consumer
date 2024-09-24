@@ -7,4 +7,4 @@ database:
   dsn: "homestead:secret@tcp(mysql:3306)/laravel_app"
 
 consumer:
-  worker_count: 5
+  workers: 5

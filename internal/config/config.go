@@ -21,7 +21,7 @@ type DatabaseConfig struct {
 }
 
 type ConsumerConfig struct {
-	WorkerCount int
+	Workers int
 }
 
 func LoadConfig() *Config {
