@@ -1,0 +1,10 @@
+rabbitmq:
+  url: "amqp://oleksandr:secret@rabbitmq:5672"
+  vhost: "source_data_vhost"
+  queue: "source_data_queue"
+
+database:
+  dsn: "homestead:secret@tcp(db:3306)/laravel_app"
+
+consumer:
+  worker_count: 5

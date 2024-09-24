@@ -1,52 +1,34 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/Wundagor/high-throughput-data-consumer/internal/db"
-	"github.com/Wundagor/high-throughput-data-consumer/internal/rabbitmq"
-	"github.com/Wundagor/high-throughput-data-consumer/internal/repository"
+	"github.com/Wundagor/high-throughput-data-consumer/internal/config"
+	"github.com/Wundagor/high-throughput-data-consumer/internal/consumer"
+	"github.com/Wundagor/high-throughput-data-consumer/internal/mq"
 )
 
-const numWorkers = 5
-
 func main() {
-	database, err := db.Connect()
+	cfg := config.LoadConfig()
 
+	rabbitMQ, err := mq.NewRabbitMQ(cfg.RabbitMQ)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Fatalf("failed to create RabbitMQ instance: %v", err)
 	}
+	defer rabbitMQ.Close()
 
-	repo := repository.NewRepository(database)
+	workerPool := consumer.NewWorkerPool(cfg.Consumer.WorkerCount, rabbitMQ, cfg.Database)
+	workerPool.Start()
 
-	rabbitConfigs := []rabbitmq.RabbitMQConfig{
-		{URL: os.Getenv("RABBITMQ_URL"), VHost: os.Getenv("RABBITMQ_VHOST"), Queue: os.Getenv("RABBITMQ_QUEUE")},
-	}
+	// Graceful shutdown
+	stopChan := make(chan os.Signal, 1)
+	signal.Notify(stopChan, syscall.SIGINT, syscall.SIGTERM)
+	<-stopChan
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	for _, config := range rabbitConfigs {
-		go func(cfg rabbitmq.RabbitMQConfig) {
-			consumer, err := rabbitmq.NewConsumer(cfg, repo)
-
-			if err != nil {
-				log.Fatalf("Failed to create RabbitMQ consumer: %v", err)
-			}
-
-			defer consumer.Close()
-
-			if err := consumer.Start(ctx, numWorkers); err != nil {
-				log.Fatalf("Failed to start RabbitMQ consumer: %v", err)
-			}
-		}(config)
-	}
-
-	sigchan := make(chan os.Signal, 1)
-	signal.Notify(sigchan, syscall.SIGINT, syscall.SIGTERM)
-	<-sigchan
+	log.Println("Shutting down workers...")
+	workerPool.Stop()
+	log.Println("Workers stopped.")
 }

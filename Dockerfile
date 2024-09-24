@@ -6,8 +6,6 @@ RUN go mod download
 
 COPY . .
 
-COPY create_table.sql /docker-entrypoint-initdb.d/
-
 RUN go build -o /goapp .
 
 CMD ["/goapp"]
