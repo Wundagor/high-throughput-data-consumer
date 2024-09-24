@@ -2,16 +2,15 @@ package repository
 
 import (
 	"context"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type SourceData struct {
-	ID          int       `db:"id"`
-	Name        string    `db:"name"`
-	Description string    `db:"description"`
-	CreatedAt   time.Time `db:"created_at"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"created_at"`
 }
 
 type Repository interface {
